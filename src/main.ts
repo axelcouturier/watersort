@@ -1,6 +1,6 @@
 import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import { GameState } from "./types/GameState";
-import { Tube } from "./types/Tube";
+import { Tube, TubeContent } from "./types/Tube";
 
 
 (async () => {
@@ -23,7 +23,8 @@ import { Tube } from "./types/Tube";
   bunny.anchor.set(0.5);
 
   // Move the sprite to the center of the screen
-  bunny.position.set(app.screen.width / 2, app.screen.height / 2);
+  //bunny.position.set(app.screen.width / 2, app.screen.height / 2);
+  bunny.position.set(20,20);
 
   // Add the bunny to the stage
   app.stage.addChild(bunny);
@@ -43,17 +44,26 @@ import { Tube } from "./types/Tube";
 
   // Initialize game setup
   const colors: string[] = [];
-  while (colors.length < 4 * 4) {
+  while (colors.length < 4 * 6 ) {
     colors.push(...availableColors); // Ensure enough colors for all blocks
   }
   colors.sort(() => Math.random() - 0.5); // Shuffle the colors randomly
   for (let i = 0; i < 6; i++) {
     const isEmptyTube = i >= 4; // Leave last two tubes empty
-    tubes.push({ container: null, waterLevels: [], colors: isEmptyTube ? [] : colors.slice(i * 4, (i + 1) * 4) });
+    const tube:Tube = {container: new Container(), content: []}
+    if(!isEmptyTube) {
+      for (let j = 0; j < 4; j++) {
+        const tc: TubeContent = {color: colors[i*6+1*j], graphics:null}
+        tube.content.push(tc)
+      }
+    }
+
+    tubes.push(tube);
   }
+
+  // Initial draw
   for (let i = 0; i < 6; i++) {
     const tube = tubes[i];
-    tube.container = new Container(); // Container for each tube
     tube.container.x = 100 + i * 120; // Position tubes horizontally
     tube.container.y = 200;
 
@@ -71,20 +81,16 @@ import { Tube } from "./types/Tube";
       for (let j = 0; j < 4; j++) {
         const water = new Graphics();
         water.rect(0, 200 - (j + 1) * 50, 50, 50); // Define water block shape
-        water.fill({ color: tube.colors[j] }); // Assign colors cyclically
+        water.fill({ color: tube.content[j].color }); // Assign colors cyclically
         tube.container.addChild(water);
-        tube.waterLevels.push(water);
+        tube.content[j].graphics = water;
       }
     }
-
-
     app.stage.addChild(tube.container);
-
     // Make the tubes interactive for pointer events
     tube.container.interactive = true;
     tube.container.on('click', () => handleTubeClick(i)); // Add click event listener
   }
-
 
   /**
    * Handles clicks on a tube.
@@ -112,7 +118,7 @@ import { Tube } from "./types/Tube";
    * @param {PIXI.Container} tube - The container representing the tube.
    * @param {boolean} highlight - Whether to highlight or not.
    */
-  function highlightTube(tube, highlight) {
+  function highlightTube(tube:Container, highlight:boolean) {
     const outline = tube.children[0]; // Get the outline graphic of the tube
     outline.clear(); // Clear previous styles
 
@@ -136,23 +142,30 @@ import { Tube } from "./types/Tube";
     const fromTube = tubes[fromIndex];
     const toTube = tubes[toIndex];
 
-    const fromColor = fromTube.colors[fromTube.colors.length - 1]; // Top color of source
-    const toColor = toTube.colors[toTube.colors.length - 1] || null; // Top color of destination
+    const fromColor = (fromTube.content[fromTube.content.length - 1]|| {}).color || null; // Top color of source
+    const toColor = (toTube.content[toTube.content.length - 1] || {}).color || null; // Top color of destination
 
-    if ((toColor === null || fromColor === toColor) && toTube.colors.length < 4) {
+    if (fromColor !== null && (toColor === null || fromColor === toColor) && toTube.content.length < 4 && fromTube.content.length > 0) {
       console.log(`Pouring ${fromColor} from Tube ${fromIndex} to Tube ${toIndex}.`);
 
-      const pouredColor: Graphics = fromTube.waterLevels.pop(); // Remove top block from source visually
-      pouredColor.clear()
-      const newWater = new Graphics();
-      newWater.rect(0, 0, 50, 50); // Define water block shape
-      newWater.fill({ color: fromTube.colors.pop() }); // Assign colors cyclically
-      newWater.y = 150 - (toTube.waterLevels.length) * 50; // Adjust position in destination visually
-      toTube.container.addChild(newWater); // Add block to destination container visually
-      toTube.waterLevels.push(newWater); // Update destination block stack visually
-      toTube.colors.push(fromColor); // Update destination color stack logically
-
-      checkWinCondition(); // Check if game is won after each move
+      const pouredColor :TubeContent|undefined= fromTube.content.pop();
+      if (!pouredColor) {
+        console.log(`No color to pour from Tube ${fromIndex}.`);
+        return;
+      }
+      if(pouredColor.graphics !== null) {
+        pouredColor.graphics.clear()
+      }
+        const newWater = new Graphics();
+        newWater.rect(0, 0, 50, 50); // Define water block shape
+        newWater.fill({ color: fromColor }); // Assign colors cyclically
+        newWater.y = 150 - (toTube.content.length) * 50; // Adjust position in destination visually
+        toTube.container.addChild(newWater); // Add block to destination container visually
+        toTube.content.push({graphics:newWater, color:fromColor}); // Update destination block stack visually
+  
+        checkWinCondition(); // Check if game is won after each move
+      
+      
     } else {
       console.log(`Invalid move. Cannot pour ${fromColor} into Tube ${toIndex}.`);
     }
@@ -163,15 +176,15 @@ import { Tube } from "./types/Tube";
    * Checks if the win condition is met (all tubes sorted by color).
    */
   function checkWinCondition() {
-    const isWin = tubes.every(
-      (tube) => tube.colors.length === 4 && new Set(tube.colors).size === 1
-    );
+    //const isWin = tubes.every(
+    //  (tube) => tube.colors.length === 4 && new Set(tube.colors).size === 1
+    //);
 
-    if (isWin) {
+    /*if (isWin) {
       console.log('You Win!');
       alert('You Win!'); // Notify player of victory
       resetGame(); // Reset game state after winning
-    }
+    }*/
   }
 
   /**
