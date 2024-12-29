@@ -44,7 +44,7 @@ import { Tube, TubeContent } from "./types/Tube";
 
   // Initialize game setup
   const gameState: GameState = {
-    tubeHeight: 5
+    tubeHeight: 4
   }
 
   const colors: string[] = [];
@@ -164,22 +164,23 @@ import { Tube, TubeContent } from "./types/Tube";
       }
       console.log('colorsToPour', colorsToPour);
       // Count how many colors we can move to the destination tube
-
-      const pouredColor: TubeContent | undefined = fromTube.content.pop();
-      if (!pouredColor) {
-        console.log(`No color to pour from Tube ${fromIndex}.`);
-        return;
+      while (colorsToPour > 0 && toTube.content.length < gameState.tubeHeight) {
+        const pouredColor: TubeContent | undefined = fromTube.content.pop();
+        if (!pouredColor) {
+          console.log(`No color to pour from Tube ${fromIndex}.`);
+          return;
+        }
+        if (pouredColor.graphics !== null) {
+          pouredColor.graphics.clear()
+        }
+        const newWater = new Graphics();
+        newWater.rect(0, 0, 50, 50); // Define water block shape
+        newWater.fill({ color: fromColor }); // Assign colors cyclically
+        newWater.y = (50 * (gameState.tubeHeight - 1)) - (toTube.content.length) * 50; // Adjust position in destination visually
+        toTube.container.addChild(newWater); // Add block to destination container visually
+        toTube.content.push({ graphics: newWater, color: fromColor }); // Update destination block stack visually
+        colorsToPour--;
       }
-      if (pouredColor.graphics !== null) {
-        pouredColor.graphics.clear()
-      }
-      const newWater = new Graphics();
-      newWater.rect(0, 0, 50, 50); // Define water block shape
-      newWater.fill({ color: fromColor }); // Assign colors cyclically
-      newWater.y = (50 * (gameState.tubeHeight - 1)) - (toTube.content.length) * 50; // Adjust position in destination visually
-      toTube.container.addChild(newWater); // Add block to destination container visually
-      toTube.content.push({ graphics: newWater, color: fromColor }); // Update destination block stack visually
-
       checkWinCondition(); // Check if game is won after each move
 
 
