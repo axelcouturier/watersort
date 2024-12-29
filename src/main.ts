@@ -1,6 +1,8 @@
 import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import { GameState } from "./types/GameState";
 import { Tube, TubeContent } from "./types/Tube";
+import { trySolve } from "./Solver";
+import { isSolved } from "./Helper";
 
 
 (async () => {
@@ -38,22 +40,40 @@ import { Tube, TubeContent } from "./types/Tube";
   });
   // Colors for water blocks
   // Colors for water blocks
-  const availableColors = ['red', 'blue', 'green', 'yellow'];
+  const availableColors = [
+    'red',
+    'blue',
+    'green',
+    'yellow',
+    'orange',
+    'purple',
+    'pink',
+    'brown',
+    'cyan',
+    'magenta',
+    'lime',
+    'teal',
+    'indigo',
+    'violet',
+    'gold',
+    'silver'
+  ];
+
   const tubes: Tube[] = []; // Array to store tube data
   let selectedTube: number | null = null; // Tracks the currently selected tube
 
   // Initialize game setup
   const gameState: GameState = {
-    tubeHeight: 4
+    tubeHeight: 4, tubeCount: 6
   }
 
   const colors: string[] = [];
-  while (colors.length < 4 * gameState.tubeHeight) {
-    colors.push(...availableColors); // Ensure enough colors for all blocks
+  while (colors.length < gameState.tubeCount * gameState.tubeHeight) {
+    colors.push(...availableColors.slice(0, gameState.tubeCount)); // Ensure enough colors for all blocks
   }
   colors.sort(() => Math.random() - 0.5); // Shuffle the colors randomly
-  for (let i = 0; i < 6; i++) {
-    const isEmptyTube = i >= 4; // Leave last two tubes empty
+  for (let i = 0; i < gameState.tubeCount + 2; i++) {
+    const isEmptyTube = i >= gameState.tubeCount; // Leave last two tubes empty
     const tube: Tube = { container: new Container(), content: [] }
     if (!isEmptyTube) {
       for (let j = 0; j < gameState.tubeHeight; j++) {
@@ -66,7 +86,7 @@ import { Tube, TubeContent } from "./types/Tube";
   }
 
   // Initial draw
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < gameState.tubeCount + 2; i++) {
     const tube = tubes[i];
     tube.container.x = 100 + i * 120; // Position tubes horizontally
     tube.container.y = gameState.tubeHeight * 50;
@@ -79,7 +99,7 @@ import { Tube, TubeContent } from "./types/Tube";
     tube.container.addChild(outline);
 
     // Add water blocks inside the tube (leave some tubes empty)
-    const isEmptyTube = i >= 4; // Leave last two tubes empty
+    const isEmptyTube = i >= gameState.tubeCount; // Leave last two tubes empty
 
     if (!isEmptyTube) {
       for (let j = 0; j < gameState.tubeHeight; j++) {
@@ -194,14 +214,25 @@ import { Tube, TubeContent } from "./types/Tube";
    * Checks if the win condition is met (all tubes sorted by color).
    */
   function checkWinCondition() {
-    const isWin = tubes.every(
-      (tube) => tube.content.length === 0 || (tube.content.length === gameState.tubeHeight && tube.content.reduce((acc, curr) => acc && curr.color === tube.content[0].color, true))
-    );
+    const isWin = isSolved(gameState, tubes);
 
     if (isWin) {
       console.log('You Win!');
       alert('You Win!'); // Notify player of victory
       resetGame(); // Reset game state after winning
+    }
+    else {
+      const solutionFromCurrentState: Array<{ from: number; to: number }> | null = trySolve(gameState, tubes.map((tube) => ({
+        ...tube,
+        container: new Container(),
+        content: tube.content.map((block) => ({
+          ...block,
+          graphics: null, // Remove the `graphics` key while keeping the structure
+        })),
+      })));
+      if (solutionFromCurrentState !== null) {
+        solutionFromCurrentState.forEach(({ from, to }) => { console.log(`SOLUTION: from ${from} to ${to}`) });
+      }
     }
   }
 

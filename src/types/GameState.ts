@@ -1,4 +1,5 @@
 
 export type GameState = {
-    tubeHeight: number;
-  };
+  tubeHeight: number;
+  tubeCount: number
+};
