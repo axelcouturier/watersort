@@ -44,7 +44,7 @@ import { Tube, TubeContent } from "./types/Tube";
 
   // Initialize game setup
   const colors: string[] = [];
-  while (colors.length < 4 * 6 ) {
+  while (colors.length < 4 * 4 ) {
     colors.push(...availableColors); // Ensure enough colors for all blocks
   }
   colors.sort(() => Math.random() - 0.5); // Shuffle the colors randomly
@@ -53,7 +53,7 @@ import { Tube, TubeContent } from "./types/Tube";
     const tube:Tube = {container: new Container(), content: []}
     if(!isEmptyTube) {
       for (let j = 0; j < 4; j++) {
-        const tc: TubeContent = {color: colors[i*6+1*j], graphics:null}
+        const tc: TubeContent = {color: colors[i*4+j], graphics:null}
         tube.content.push(tc)
       }
     }
@@ -119,6 +119,7 @@ import { Tube, TubeContent } from "./types/Tube";
    * @param {boolean} highlight - Whether to highlight or not.
    */
   function highlightTube(tube:Container, highlight:boolean) {
+    console.log('Highlight', tube)
     const outline = tube.children[0]; // Get the outline graphic of the tube
     outline.clear(); // Clear previous styles
 
@@ -176,15 +177,15 @@ import { Tube, TubeContent } from "./types/Tube";
    * Checks if the win condition is met (all tubes sorted by color).
    */
   function checkWinCondition() {
-    //const isWin = tubes.every(
-    //  (tube) => tube.colors.length === 4 && new Set(tube.colors).size === 1
-    //);
+    const isWin = tubes.every(
+      (tube) => tube.content.length===0 || (tube.content.length === 4 &&tube.content.reduce((acc, curr) => acc && curr.color === tube.content[0].color, true))
+    );
 
-    /*if (isWin) {
+    if (isWin) {
       console.log('You Win!');
       alert('You Win!'); // Notify player of victory
       resetGame(); // Reset game state after winning
-    }*/
+    }
   }
 
   /**
@@ -198,6 +199,5 @@ import { Tube, TubeContent } from "./types/Tube";
       container.removeChildren(); // Clear all children from each container (tube)
     });
 
-    location.reload(); // Reloads page for simplicity. Replace with custom reset logic if needed.
   }
 })();
