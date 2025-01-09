@@ -1,5 +1,6 @@
 
 export type GameState = {
   tubeHeight: number;
-  tubeCount: number
+  tubeCount: number,
+  rowCount: number,
 };

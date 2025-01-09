@@ -1,7 +1,7 @@
-import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
+import { Application, Assets, Container, Graphics, Sprite, Text } from "pixi.js";
 import { GameState } from "./types/GameState";
 import { Tube, TubeContent } from "./types/Tube";
-import { trySolve } from "./Solver";
+import { checkSolutionExists, trySolve } from "./Solver";
 import { isSolved } from "./Helper";
 
 
@@ -31,6 +31,43 @@ import { isSolved } from "./Helper";
   // Add the bunny to the stage
   app.stage.addChild(bunny);
 
+  // Add solver button:
+  // Create the button text
+  const buttonText = new Text({
+    text: "Get Hint", style: {
+      fontFamily: 'Arial',
+      fontSize: 36,
+      fill: 0xffffff, // White text color
+      align: 'center',
+    }
+  });
+
+  // Create the button background
+  const buttonBackground = new Graphics();
+  buttonBackground.roundRect(0, 0, buttonText.width + 20, buttonText.height + 10, 10); // Rounded rectangle
+  buttonBackground.fill(0x007bff); // Blue background color
+
+  // Center the text on the background
+  buttonText.x = (buttonBackground.width - buttonText.width) / 2;
+  buttonText.y = (buttonBackground.height - buttonText.height) / 2;
+
+  // Create a container to hold the text and background
+  const buttonContainer = new Container();
+  buttonContainer.addChild(buttonBackground);
+  buttonContainer.addChild(buttonText);
+
+  // Set the position of the container
+  buttonContainer.x = 100;
+  buttonContainer.y = 100;
+
+  // Make it interactive and clickable
+  buttonContainer.interactive = true;
+
+  // Add click event listener
+  buttonContainer.on('pointerdown', () => getHint());
+
+  app.stage.addChild(buttonContainer);
+
   // Listen for animate update
   app.ticker.add((time) => {
     // Just for fun, let's rotate mr rabbit a little.
@@ -38,7 +75,6 @@ import { isSolved } from "./Helper";
     // * Creates frame-independent transformation *
     bunny.rotation += 0.1 * time.deltaTime;
   });
-  // Colors for water blocks
   // Colors for water blocks
   const availableColors = [
     'red',
@@ -64,8 +100,11 @@ import { isSolved } from "./Helper";
 
   // Initialize game setup
   const gameState: GameState = {
-    tubeHeight: 4, tubeCount: 6
+    tubeHeight: 4, tubeCount: 11, rowCount: 1
   }
+
+  // Update row count according to screen size : // TODO: handle resize
+  gameState.rowCount = 1 + Math.floor((gameState.tubeCount * 120) / (app.screen.width - 200));
 
   const colors: string[] = [];
   while (colors.length < gameState.tubeCount * gameState.tubeHeight) {
@@ -137,6 +176,22 @@ import { isSolved } from "./Helper";
     }
   }
 
+  function getHint(): void {
+    console.log('Hint requested');
+    const solutionFromCurrentState: Array<{ from: number; to: number }> | null = trySolve(gameState, tubes.map((tube) => ({
+      ...tube,
+      container: new Container(),
+      content: tube.content.map((block) => ({
+        ...block,
+        graphics: null, // Remove the `graphics` key while keeping the structure
+      })),
+    })));
+    if (solutionFromCurrentState !== null) {
+      solutionFromCurrentState.forEach(({ from, to }) => { console.log(`SOLUTION: from ${from} to ${to}`) });
+    }
+
+  }
+
   /**
    * Highlights or removes highlight from a specific tube.
    * @param {PIXI.Container} tube - The container representing the tube.
@@ -144,7 +199,7 @@ import { isSolved } from "./Helper";
    */
   function highlightTube(tube: Container, highlight: boolean) {
     console.log('Highlight', tube)
-    const outline = tube.children[0]; // Get the outline graphic of the tube
+    const outline = tube.children[0] as Graphics; // Get the outline graphic of the tube
     outline.clear(); // Clear previous styles
 
     if (highlight) {
@@ -222,17 +277,16 @@ import { isSolved } from "./Helper";
       resetGame(); // Reset game state after winning
     }
     else {
-      const solutionFromCurrentState: Array<{ from: number; to: number }> | null = trySolve(gameState, tubes.map((tube) => ({
+      console.log(checkSolutionExists(gameState, tubes.map((tube) => ({
         ...tube,
         container: new Container(),
         content: tube.content.map((block) => ({
           ...block,
           graphics: null, // Remove the `graphics` key while keeping the structure
-        })),
-      })));
-      if (solutionFromCurrentState !== null) {
-        solutionFromCurrentState.forEach(({ from, to }) => { console.log(`SOLUTION: from ${from} to ${to}`) });
+        }))
       }
+      ))));
+
     }
   }
 
