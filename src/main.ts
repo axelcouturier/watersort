@@ -92,7 +92,14 @@ import { isSolved } from "./Helper";
     'indigo',
     'violet',
     'gold',
-    'silver'
+    'silver',
+    'black',
+    'white',
+    'gray',
+    'turquoise',
+    'maroon',
+    'beige',
+    'lavender',
   ];
 
   const tubes: Tube[] = []; // Array to store tube data
@@ -100,11 +107,12 @@ import { isSolved } from "./Helper";
 
   // Initialize game setup
   const gameState: GameState = {
-    tubeHeight: 4, tubeCount: 11, rowCount: 1
+    tubeHeight: 4, tubeCount: 31, rowCount: 1
   }
 
   // Update row count according to screen size : // TODO: handle resize
-  gameState.rowCount = 1 + Math.floor((gameState.tubeCount * 120) / (app.screen.width - 200));
+  gameState.rowCount = 1 + Math.floor((app.screen.width - 200) / 120);
+  console.log('rowCount', gameState.rowCount);
 
   const colors: string[] = [];
   while (colors.length < gameState.tubeCount * gameState.tubeHeight) {
@@ -127,8 +135,8 @@ import { isSolved } from "./Helper";
   // Initial draw
   for (let i = 0; i < gameState.tubeCount + 2; i++) {
     const tube = tubes[i];
-    tube.container.x = 100 + i * 120; // Position tubes horizontally
-    tube.container.y = gameState.tubeHeight * 50;
+    tube.container.x = 100 + (i % gameState.rowCount) * 120; // Position tubes horizontally
+    tube.container.y = gameState.tubeHeight * 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) + 1 : 1) + (i >= gameState.rowCount ? 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) : 1) : 0);
 
     // Draw the outline of the tube
     const outline = new Graphics();
