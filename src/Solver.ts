@@ -6,7 +6,6 @@ import { Tube } from "./types/Tube";
  * Solves the Water Sort Puzzle using Breadth-First Search (BFS) to find the minimum steps.
  * @param {GameState} gameState - The initial state of the puzzle.
  * @param {Tube[]} tubes - The array of tubes representing the puzzle state.
- * @returns {Array<{from: number, to: number}> | null} - The sequence of moves to solve the puzzle in minimum steps, or null if no solution exists.
  */
 export function trySolve(gameState: GameState, tubes: Tube[]): Array<{ from: number; to: number }> | null {
     console.log("Solver started with BFS", tubes);
@@ -54,21 +53,23 @@ export function trySolve(gameState: GameState, tubes: Tube[]): Array<{ from: num
 export function checkSolutionExists(gameState: GameState, tubes: Tube[]): boolean {
     console.log("Checking if a solution exists...");
 
-    const visitedStates = new Set<string>();
-    const initialKey = stateKey(tubes);
-    visitedStates.add(initialKey);
+    const visitedStates = new Array<string>();
+    //const initialKey = stateKey(tubes);
+    //visitedStates.add(initialKey);
 
     // Recursive DFS function
     function dfs(state: Tube[]): boolean {
         if (isSolved(gameState, state)) {
+            console.log('Solution found')
             return true; // A solution exists
         }
 
         const currentKey = stateKey(state);
-        if (visitedStates.has(currentKey)) {
+        console.log('currentKey', currentKey, visitedStates.length, state)
+        if (visitedStates.includes(currentKey)) {
             return false; // Already visited this state
         }
-        visitedStates.add(currentKey);
+        visitedStates.push(currentKey);
 
         for (let from = 0; from < state.length; from++) {
             for (let to = 0; to < state.length; to++) {
