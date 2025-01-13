@@ -1,4 +1,4 @@
-import { Application, Assets, Container, ContainerChild, Graphics, Sprite, Text } from "pixi.js";
+import { Application, Assets, Container, ContainerChild, Graphics, Sprite } from "pixi.js";
 import { GameState } from "./types/GameState";
 import { Tube, TubeContent } from "./types/Tube";
 import { checkSolutionExists, trySolve } from "./Solver";
