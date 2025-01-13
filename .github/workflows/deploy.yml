@@ -39,5 +39,5 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.7.2
         with:
-          branch: master     # Target branch for GitHub Pages deployment
+          branch: gh-pages     # Target branch for GitHub Pages deployment
           folder: dist           # Folder containing the built files (adjust if necessary)
