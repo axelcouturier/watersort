@@ -82,7 +82,7 @@ import { createSplash } from "./helpers/createSplash";
 
   // Initialize game setup
   const gameState: GameState = {
-    tubeHeight: 5, tubeCount: 12, rowCount: 1, history: [], emptyTubes: 2
+    tubeHeight: 4, tubeCount: 6, rowCount: 1, history: [], emptyTubes: 2
   }
 
   // Update row count according to screen size : // TODO: handle resize
@@ -114,21 +114,44 @@ import { createSplash } from "./helpers/createSplash";
     }
   }
 
-  function getHint(): void {
+  async function getHint(): Promise<void> {
     console.log('Hint requested');
-    const solutionFromCurrentState: Array<{ from: number; to: number }> | null = trySolve(gameState, tubes.map((tube) => ({
-      ...tube,
-      container: null,
-      content: tube.content.map((block) => ({
-        ...block,
-        graphics: null, // Remove the `graphics` key while keeping the structure
-      })),
-    })));
-    if (solutionFromCurrentState !== null) {
-      solutionFromCurrentState.forEach(({ from, to }) => { console.log(`SOLUTION: from ${from} to ${to}`) });
-    }
 
+    // Step 1: Create and display the splash screen
+    const splashLoading: Container = createSplash(app.screen.width, app.screen.height, "Searching best solution...");
+    app.stage.addChild(splashLoading);
+    await new Promise((resolve) => app.ticker.addOnce(resolve));
+
+    // Step 2: Use a background task to compute the solution without blocking UI updates
+    const solutionFromCurrentState: Array<{ from: number; to: number }> | null = await trySolve(
+      gameState,
+      tubes.map((tube) => ({
+        ...tube,
+        container: null,
+        content: tube.content.map((block) => ({
+          ...block,
+          graphics: null, // Remove the `graphics` key while keeping the structure
+        })),
+      }))
+    );
+
+    // Step 3: Process and remove the splash screen after computation
+    if (solutionFromCurrentState !== null) {
+      solutionFromCurrentState.forEach(({ from, to }) => {
+        console.log(`SOLUTION: from ${from} to ${to}`);
+      });
+
+      // Remove splash screen
+      splashLoading.removeFromParent();
+
+      // Execute the first move in the solution
+      pour({ from: solutionFromCurrentState[0].from, to: solutionFromCurrentState[0].to });
+    } else {
+      console.log("No solution found.");
+      splashLoading.removeFromParent();
+    }
   }
+
 
   /**
    * Highlights or removes highlight from a specific tube.

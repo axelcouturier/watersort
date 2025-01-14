@@ -7,7 +7,7 @@ import { Tube } from "./types/Tube";
  * @param {GameState} gameState - The initial state of the puzzle.
  * @param {Tube[]} tubes - The array of tubes representing the puzzle state.
  */
-export function trySolve(gameState: GameState, tubes: Tube[]): Array<{ from: number; to: number }> | null {
+export async function trySolve(gameState: GameState, tubes: Tube[]): Promise<Array<{ from: number; to: number }> | null> {
     console.log("Solver started with BFS", tubes);
 
     // BFS queue: each entry contains [current state (reference to tubes), moves taken so far]
@@ -18,11 +18,13 @@ export function trySolve(gameState: GameState, tubes: Tube[]): Array<{ from: num
     while (queue.length > 0) {
         const [currentState, moves] = queue.shift()!;
 
+        // Check if the current state is solved
         if (isSolved(gameState, currentState)) {
             console.log("Solution found with BFS:", moves);
             return moves; // Return the sequence of moves for the shortest solution
         }
 
+        // Iterate over all possible moves
         for (let from = 0; from < currentState.length; from++) {
             for (let to = 0; to < currentState.length; to++) {
                 if (!isValidMove(currentState, from, to, gameState)) continue;
@@ -37,11 +39,17 @@ export function trySolve(gameState: GameState, tubes: Tube[]): Array<{ from: num
                 }
             }
         }
+
+        // Yield control back to the event loop every X iterations
+        if (queue.length % 100 === 0) {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        }
     }
 
     console.log("No solution exists.");
     return null; // No solution found
 }
+
 
 /**
  * Checks if a solution exists for the Water Sort Puzzle without finding the best solution.
