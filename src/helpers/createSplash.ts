@@ -1,6 +1,7 @@
 import { Container, Graphics, Text } from "pixi.js";
 
 export function createSplash(width: number, height: number, text: string): Container {
+    console.log('createSplash', width, height, text)
     // Create the button text
     const buttonText = new Text({
         text, style: {
