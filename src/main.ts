@@ -105,6 +105,7 @@ import { createSplash } from "./helpers/createSplash";
     } else {
       if (index !== selectedTube) {
         console.log(`Attempting to pour from Tube ${selectedTube} to Tube ${index}.`);
+
         attemptPour({ from: selectedTube, to: index }); // Attempt to pour water from selected to clicked
       }
       if (tubes[selectedTube].container !== null)
@@ -145,7 +146,21 @@ import { createSplash } from "./helpers/createSplash";
       splashLoading.removeFromParent();
 
       // Execute the first move in the solution
-      pour({ from: solutionFromCurrentState[0].from, to: solutionFromCurrentState[0].to });
+      // Count how many colors we need to pour from the source tube
+      let colorsToPour = 1;
+      const fromTube = tubes[solutionFromCurrentState[0].from]
+      const fromColor = (fromTube.content[fromTube.content.length - 1] || {}).color || null; // Top color of source
+
+      for (let i = fromTube.content.length - 2; i >= 0; i--) {
+        if (fromTube.content[i].color === fromColor) {
+          colorsToPour++;
+        } else {
+          break;
+        }
+      }
+      console.log('colorsToPour', colorsToPour);
+
+      pour({ from: solutionFromCurrentState[0].from, to: solutionFromCurrentState[0].to, amount: colorsToPour });
     } else {
       console.log("No solution found.");
       splashLoading.removeFromParent();
@@ -187,7 +202,19 @@ import { createSplash } from "./helpers/createSplash";
     const toColor = (toTube.content[toTube.content.length - 1] || {}).color || null; // Top color of destination
 
     if (fromColor !== null && (toColor === null || fromColor === toColor) && toTube.content.length < gameState.tubeHeight && fromTube.content.length > 0) {
-      pour(move)
+      // Count how many colors we need to pour from the source tube
+      let colorsToPour = 1;
+      const fromColor = (fromTube.content[fromTube.content.length - 1] || {}).color || null; // Top color of source
+
+      for (let i = fromTube.content.length - 2; i >= 0; i--) {
+        if (fromTube.content[i].color === fromColor) {
+          colorsToPour++;
+        } else {
+          break;
+        }
+      }
+      console.log('colorsToPour', colorsToPour);
+      pour({ ...move, amount: colorsToPour }); // Pour water from source to destination
       checkWinCondition(); // Check if game is won after each move
 
 
@@ -204,16 +231,8 @@ import { createSplash } from "./helpers/createSplash";
 
     console.log(`Pouring ${fromColor} from Tube ${move.from} to Tube ${move.to}.`);
 
-    // Count how many colors we need to pour from the source tube
-    let colorsToPour = 1;
-    for (let i = fromTube.content.length - 2; i >= 0; i--) {
-      if (fromTube.content[i].color === fromColor) {
-        colorsToPour++;
-      } else {
-        break;
-      }
-    }
-    console.log('colorsToPour', colorsToPour);
+    let colorsToPour = move.amount;
+    if (colorsToPour === undefined) return;
     // Count how many colors we can move to the destination tube
     while (colorsToPour > 0 && toTube.content.length < gameState.tubeHeight) {
       const pouredColor: TubeContent | undefined = fromTube.content.pop();
@@ -276,7 +295,7 @@ import { createSplash } from "./helpers/createSplash";
     const previousMove: Move | undefined = gameState.history.pop();
     console.log('Wayback machine', previousMove)
     if (typeof previousMove !== 'undefined')
-      pour({ from: previousMove.to, to: previousMove.from }, true)
+      pour({ ...previousMove, from: previousMove.to, to: previousMove.from }, true)
   }
 
   /**

@@ -3,4 +3,6 @@
 export type Move = {
     from: number,
     to: number,
+    amount?: number;
+
 }
