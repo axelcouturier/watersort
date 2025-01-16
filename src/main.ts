@@ -86,7 +86,7 @@ import { createSplash } from "./helpers/createSplash";
   }
 
   // Update row count according to screen size : // TODO: handle resize
-  gameState.rowCount = 1 + Math.floor((app.screen.width - 100) / 120);
+  gameState.rowCount = 1 + Math.floor((app.screen.width - 100) / 80);
   console.log('rowCount', gameState.rowCount);
 
   resetGame();
@@ -334,7 +334,7 @@ import { createSplash } from "./helpers/createSplash";
     for (let i = 0; i < gameState.tubeCount + gameState.emptyTubes; i++) {
       const tube = tubes[i];
       if (tube.container === null) return;  // Skip if container is null
-      tube.container.x = 50 + (i % gameState.rowCount) * 120; // Position tubes horizontally
+      tube.container.x = 50 + (i % gameState.rowCount) * 80; // Position tubes horizontally
       tube.container.y = 100 + gameState.tubeHeight * 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) : 0) + (i >= gameState.rowCount ? 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) : 1) : 0);
 
       // Draw the outline of the tube

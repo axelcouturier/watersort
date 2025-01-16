@@ -73,7 +73,6 @@ export function checkSolutionExists(gameState: GameState, tubes: Tube[]): boolea
         }
 
         const currentKey = stateKey(state);
-        console.log('currentKey', currentKey, visitedStates.length, state)
         if (visitedStates.includes(currentKey)) {
             return false; // Already visited this state
         }
