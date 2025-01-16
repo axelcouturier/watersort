@@ -43,12 +43,12 @@ import { createSplash } from "./helpers/createSplash";
   });
 
   // Add solver button:
-  app.stage.addChild(createButton('Get hint', getHint, 100, 100))
+  app.stage.addChild(createButton('Get hint', getHint, 100, 10))
 
   // Add back button:
-  app.stage.addChild(createButton('Back', goBack, 300, 100))
+  app.stage.addChild(createButton('Back', goBack, 300, 10))
   // Add back button:
-  app.stage.addChild(createButton('Reset', resetGame, 500, 100))
+  app.stage.addChild(createButton('Reset', resetGame, 500, 10))
 
   // Colors for water blocks
   const availableColors = [
@@ -82,11 +82,11 @@ import { createSplash } from "./helpers/createSplash";
 
   // Initialize game setup
   const gameState: GameState = {
-    tubeHeight: 4, tubeCount: 6, rowCount: 1, history: [], emptyTubes: 2
+    tubeHeight: 4, tubeCount: 10, rowCount: 1, history: [], emptyTubes: 2
   }
 
   // Update row count according to screen size : // TODO: handle resize
-  gameState.rowCount = 1 + Math.floor((app.screen.width - 200) / 120);
+  gameState.rowCount = 1 + Math.floor((app.screen.width - 100) / 120);
   console.log('rowCount', gameState.rowCount);
 
   resetGame();
@@ -315,8 +315,8 @@ import { createSplash } from "./helpers/createSplash";
     for (let i = 0; i < gameState.tubeCount + gameState.emptyTubes; i++) {
       const tube = tubes[i];
       if (tube.container === null) return;  // Skip if container is null
-      tube.container.x = 100 + (i % gameState.rowCount) * 120; // Position tubes horizontally
-      tube.container.y = gameState.tubeHeight * 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) + 1 : 1) + (i >= gameState.rowCount ? 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) : 1) : 0);
+      tube.container.x = 50 + (i % gameState.rowCount) * 120; // Position tubes horizontally
+      tube.container.y = 100 + gameState.tubeHeight * 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) : 0) + (i >= gameState.rowCount ? 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) : 1) : 0);
 
       // Draw the outline of the tube
       const outline = new Graphics();
