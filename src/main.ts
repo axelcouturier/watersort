@@ -82,7 +82,7 @@ import { createSplash } from "./helpers/createSplash";
 
   // Initialize game setup
   const gameState: GameState = {
-    tubeHeight: 4, tubeCount: 10, rowCount: 1, history: [], emptyTubes: 2
+    tubeHeight: 4, tubeCount: 12, rowCount: 1, history: [], emptyTubes: 2
   }
 
   // Update row count according to screen size : // TODO: handle resize
