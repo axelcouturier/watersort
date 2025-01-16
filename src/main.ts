@@ -340,7 +340,7 @@ import { createSplash } from "./helpers/createSplash";
       app.stage.addChild(tube.container);
       // Make the tubes interactive for pointer events
       tube.container.interactive = true;
-      tube.container.on('click', () => handleTubeClick(i)); // Add click event listener
+      tube.container.on('pointerdown', () => handleTubeClick(i)); // Add click event listener
     }
 
   }
