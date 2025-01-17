@@ -6,6 +6,7 @@ import { isSolved } from "./Helper";
 import { Move } from "./types/Move";
 import { createButton } from "./helpers/createButton";
 import { createSplash } from "./helpers/createSplash";
+import { drawTube } from "./helpers/drawTube";
 
 
 (async () => {
@@ -44,7 +45,6 @@ import { createSplash } from "./helpers/createSplash";
 
   // Add solver button:
   app.stage.addChild(createButton('Get hint', getHint, 100, 10))
-
   // Add back button:
   app.stage.addChild(createButton('Back', goBack, 300, 10))
   // Add back button:
@@ -68,8 +68,6 @@ import { createSplash } from "./helpers/createSplash";
     'violet',
     'gold',
     'silver',
-    'black',
-    'white',
     'gray',
     'turquoise',
     'maroon',
@@ -236,19 +234,30 @@ import { createSplash } from "./helpers/createSplash";
     // Count how many colors we can move to the destination tube
     while (colorsToPour > 0 && toTube.content.length < gameState.tubeHeight) {
       const pouredColor: TubeContent | undefined = fromTube.content.pop();
+      // Display the color if hidden mode:
+      const belowPoured = (fromTube.content[fromTube.content.length - 1]);
+      if (typeof belowPoured !== 'undefined' && belowPoured.hidden) {
+        console.log('poured color revealed', belowPoured, belowPoured.graphics);
+        belowPoured.hidden = false
+      }
+      toTube.content.push({ graphics: null, color: fromColor, hidden: false }); // Update destination block stack visually
+      tubes[move.to] = drawTube(gameState, toTube, toTube.container?.x || 0, toTube.container?.y || 0);
+      tubes[move.to].container?.removeFromParent();
+      app.stage.addChild(tubes[move.to].container as Container);
+      if (tubes[move.to].container === null) return;
+      tubes[move.to].container?.on('pointerdown', () => handleTubeClick(move.to)); // Add click event listener
+
       if (!pouredColor) {
         console.log(`No color to pour from Tube ${move.from}.`);
         return;
       }
-      if (pouredColor.graphics !== null) {
-        pouredColor.graphics.clear()
+      let { x, y } = fromTube.container?.getGlobalPosition() || { x: 0, y: 0 };
+      tubes[move.from].container?.removeFromParent();
+      tubes[move.from] = drawTube(gameState, fromTube, x, y);
+      if (tubes[move.from].container !== null) {
+        app.stage.addChild(tubes[move.from].container as Container);
+        tubes[move.from].container?.on('pointerdown', () => handleTubeClick(move.from)); // Add click event listener
       }
-      const newWater = new Graphics();
-      newWater.rect(0, 0, 50, 50); // Define water block shape
-      newWater.fill({ color: fromColor }); // Assign colors cyclically
-      newWater.y = (50 * (gameState.tubeHeight - 1)) - (toTube.content.length) * 50; // Adjust position in destination visually
-      toTube.container?.addChild(newWater); // Add block to destination container visually
-      toTube.content.push({ graphics: newWater, color: fromColor }); // Update destination block stack visually
 
       // Store the update in the history: 
       if (!preventHistory)
@@ -304,6 +313,8 @@ import { createSplash } from "./helpers/createSplash";
   function resetGame() {
     console.log('Resetting game...');
 
+    const hiddenMode = true;
+
     tubes.forEach((tubeData) => {
       const { container } = tubeData;
       if (container === null) return;
@@ -322,7 +333,7 @@ import { createSplash } from "./helpers/createSplash";
       const tube: Tube = { container: new Container(), content: [] }
       if (!isEmptyTube) {
         for (let j = 0; j < gameState.tubeHeight; j++) {
-          const tc: TubeContent = { color: colors[i * gameState.tubeHeight + j], graphics: null }
+          const tc: TubeContent = { color: colors[i * gameState.tubeHeight + j], graphics: null, hidden: hiddenMode ? j !== gameState.tubeHeight - 1 : false }
           tube.content.push(tc)
         }
       }
@@ -330,35 +341,15 @@ import { createSplash } from "./helpers/createSplash";
     }
 
 
+
     // Initial draw
     for (let i = 0; i < gameState.tubeCount + gameState.emptyTubes; i++) {
-      const tube = tubes[i];
+      let tube: Tube = tubes[i];
+
+      tube = drawTube(gameState, tube, 50 + (i % gameState.rowCount) * 80, 100 + gameState.tubeHeight * 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) : 0) + (i >= gameState.rowCount ? 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) : 1) : 0));
       if (tube.container === null) return;  // Skip if container is null
-      tube.container.x = 50 + (i % gameState.rowCount) * 80; // Position tubes horizontally
-      tube.container.y = 100 + gameState.tubeHeight * 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) : 0) + (i >= gameState.rowCount ? 50 * (i >= gameState.rowCount ? Math.floor(i / gameState.rowCount) : 1) : 0);
 
-      // Draw the outline of the tube
-      const outline = new Graphics();
-      outline.rect(0, 0, 50, gameState.tubeHeight * 50); // Define rectangle shape
-      outline.fill({ color: 0xffffff }); // White fill
-      outline.stroke({ width: 2, color: 0x000000 }); // Black border
-      tube.container.addChild(outline);
-
-      // Add water blocks inside the tube (leave some tubes empty)
-      const isEmptyTube = i >= gameState.tubeCount; // Leave last two tubes empty
-
-      if (!isEmptyTube) {
-        for (let j = 0; j < gameState.tubeHeight; j++) {
-          const water = new Graphics();
-          water.rect(0, 50 * gameState.tubeHeight - (j + 1) * 50, 50, 50); // Define water block shape
-          water.fill({ color: tube.content[j].color }); // Assign colors cyclically
-          tube.container.addChild(water);
-          tube.content[j].graphics = water;
-        }
-      }
       app.stage.addChild(tube.container);
-      // Make the tubes interactive for pointer events
-      tube.container.interactive = true;
       tube.container.on('pointerdown', () => handleTubeClick(i)); // Add click event listener
     }
 
