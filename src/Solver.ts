@@ -65,7 +65,7 @@ export function checkSolutionExists(gameState: GameState, tubes: Tube[]): boolea
     const stack: { state: Tube[], from: number, to: number }[] = [{ state: tubes, from: -1, to: -1 }];
 
     while (stack.length > 0) {
-        const { state, from, to } = stack.pop()!;
+        const { state } = stack.pop()!;
 
         if (isSolved(gameState, state)) {
             console.log('Solution found');

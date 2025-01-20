@@ -1,4 +1,4 @@
-import { Container, Graphics, Text } from "pixi.js";
+import { Container, Graphics } from "pixi.js";
 import { GameState } from "../types/GameState";
 import { Tube } from "../types/Tube";
 
