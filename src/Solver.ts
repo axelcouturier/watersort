@@ -61,56 +61,58 @@ export async function trySolve(gameState: GameState, tubes: Tube[]): Promise<Arr
 export function checkSolutionExists(gameState: GameState, tubes: Tube[]): boolean {
     console.log("Checking if a solution exists...");
 
-    const visitedStates = new Array<string>();
-    //const initialKey = stateKey(tubes);
-    //visitedStates.add(initialKey);
+    const visitedStates = new Set<string>();
+    const stack: { state: Tube[], from: number, to: number }[] = [{ state: tubes, from: -1, to: -1 }];
 
-    // Recursive DFS function
-    function dfs(state: Tube[]): boolean {
+    while (stack.length > 0) {
+        const { state, from, to } = stack.pop()!;
+
         if (isSolved(gameState, state)) {
-            console.log('Solution found')
+            console.log('Solution found');
             return true; // A solution exists
         }
 
         const currentKey = stateKey(state);
-        if (visitedStates.includes(currentKey)) {
-            return false; // Already visited this state
+        if (visitedStates.has(currentKey)) {
+            continue; // Already visited this state
         }
-        visitedStates.push(currentKey);
+        visitedStates.add(currentKey);
 
-        for (let from = 0; from < state.length; from++) {
-            for (let to = 0; to < state.length; to++) {
-                if (!isValidMove(state, from, to, gameState)) continue;
+        for (let i = 0; i < state.length; i++) {
+            for (let j = 0; j < state.length; j++) {
+                if (i === j || !isValidMove(state, i, j, gameState)) continue;
 
                 // Perform the move
-                const block = state[from].content.pop();
+                const block = state[i].content.pop();
                 if (block !== undefined) {
-                    state[to].content.push(block);
+                    state[j].content.push(block);
 
-                    // Recurse into the new state
-                    if (dfs(state)) return true;
+                    // Push the new state onto the stack
+                    stack.push({ state: cloneState(state), from: i, to: j });
 
-                    // Undo the move (backtrack)
-                    state[to].content.pop();
-                    state[from].content.push(block);
+                    // Undo the move
+                    state[j].content.pop();
+                    state[i].content.push(block);
                 }
             }
         }
-
-        return false; // No solution found in this branch
     }
 
-    return dfs(tubes);
+    console.log("No solution exists.");
+    return false; // No solution found
 }
 
-/**
- * Generates a unique key for a given state of tubes.
- * @param {Tube[]} state - The current state of tubes.
- * @returns {string} - A unique string key representing the state.
- */
-function stateKey(state: Tube[]): string {
-    return state.map((tube) => tube.content.map((block) => block.color).join(",")).join("|");
+function cloneState(state: Tube[]): Tube[] {
+    return state.map(tube => ({
+        ...tube,
+        content: [...tube.content]
+    }));
 }
+
+function stateKey(state: Tube[]): string {
+    return state.map(tube => tube.content.map(block => block.color).join(',')).sort((a, b) => a.localeCompare(b)).join('|');
+}
+
 
 /**
  * Deep copies the tubes array for BFS branching.
